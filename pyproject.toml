@@ -1,0 +1,36 @@
+[tool.poetry]
+name = "selfhosted-runners"
+version = "0.1.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.12"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.6.4"
+mypy = "^1.11.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff.lint]
+select = [
+  "E", "F", "Q", "W", "D", "I", "N",
+  "UP", "ANN", "ASYNC", "S", "B", "C",
+  "G", "INP", "PIE", "PT", "RET", "ARG",
+  "PTH", "TD", "TRY", "RUF"
+]
+fixable = ["ALL"]
+ignore = ["ANN101", "ANN102"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+"{src,tests}/**/__init__.py" = ["D104"]
+"tests/**/test_*.py" = ["S101"]
+"migrations/**/*.py" = ["INP001", "D100", "PIE790", "E501"]
