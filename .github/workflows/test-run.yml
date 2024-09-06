@@ -12,3 +12,10 @@ jobs:
 
       - name: Run "Hello World!"
         run: echo "Hello World!"
+
+  second-job:
+    name: Second Workflow
+    runs-on: self-hosted
+    steps:
+      - name: Echo "Second Job"
+        run: echo "Second Job!"
