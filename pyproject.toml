@@ -29,8 +29,3 @@ ignore = ["ANN101", "ANN102"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
-
-[tool.ruff.lint.per-file-ignores]
-"{src,tests}/**/__init__.py" = ["D104"]
-"tests/**/test_*.py" = ["S101"]
-"migrations/**/*.py" = ["INP001", "D100", "PIE790", "E501"]
