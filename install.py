@@ -2,6 +2,11 @@
 
 """Script to install and setup the self-hosted GitHub Action runners.
 
+The script is made publicly available under the terms and conditions of the MIT
+license. You will find more information about the distribution and usage copyright
+guidelines in the LICENSE file linked below:
+https://github.com/Weburz/selfhosted-runners/blob/main/LICENSE
+
 For more information
 on the tool, refer to the documentations accessible at:
 https://docs.github.com/en/actions/hosting-your-own-runners/managing-self-hosted-runners/about-self-hosted-runners
@@ -18,7 +23,17 @@ import argparse
 
 
 def main() -> None:
-    """Entrypoint of the script."""
+    """Entrypoint of the script.
+
+    Args:
+        None
+
+    Returns:
+        None
+
+    Raises:
+        None
+    """
     # Initialise the ArgumentParser object
     parser = argparse.ArgumentParser(
         description="install and setup the self-hosted GitHub Action runners."
