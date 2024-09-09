@@ -45,22 +45,31 @@ def main() -> None:
     parser.add_argument(
         "-n",
         "--number",
+        type=int,
         default=1,
         help="the number of runners to spin up (default: 1)",
+    )
+
+    parser.add_argument(
+        "-l",
+        "--location",
+        type=str,
+        help="the location on the host to install the runners at (default: pwd)",
     )
 
     # Generate the list of arguments for further processing
     args = parser.parse_args()
 
     # Install and setup the runners on the remote host
-    setup_runner(args.number)
+    setup_runner(args.number, location=args.location)
 
 
-def setup_runner(n: int = 1) -> None:
+def setup_runner(n: int = 1, location: str | None = None) -> None:
     """Install and setup the GitHub Action selfhosted runners.
 
     Args:
         n: Install n number of runners on the host.
+        location: The location to install the runners at.
 
     Returns:
         None
@@ -70,7 +79,13 @@ def setup_runner(n: int = 1) -> None:
     """
     # Create a list of uniquely named directories to store the runners under.
     dir_uuids = [str(uuid.uuid4()).split("-")[0] for _ in range(int(n))]
-    runner_dir = pathlib.Path(pathlib.Path.cwd() / "runners")
+
+    if not location:
+        runner_dir = pathlib.Path(pathlib.Path.cwd() / "runners")
+    else:
+        runner_dir = pathlib.Path(
+            pathlib.Path.home() / pathlib.Path(location) / "runners"
+        )
 
     print(f"Creating {n} directories to install the runners under:")
     for idx in range(len(dir_uuids)):
