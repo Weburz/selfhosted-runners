@@ -20,8 +20,11 @@ Follow the instructions below for a brief usage guideline of the script:
 """
 
 import argparse
+import logging
 import pathlib
 import uuid
+
+logger = logging.getLogger(__name__)
 
 
 def main() -> None:
@@ -36,6 +39,8 @@ def main() -> None:
     Raises:
         None
     """
+    logging.basicConfig(format="[INFO] %(message)s", level=logging.INFO)
+
     # Initialise the ArgumentParser object
     parser = argparse.ArgumentParser(
         description="install and setup the self-hosted GitHub Action runners."
@@ -80,6 +85,19 @@ def setup_runner(n: int = 1, location: str | None = None) -> None:
     # Create a list of uniquely named directories to store the runners under.
     dir_uuids = [str(uuid.uuid4()).split("-")[0] for _ in range(int(n))]
 
+    # Create the directories in the specified location
+    if not location:
+        create_directories(n=n, dir_uuids=dir_uuids)
+    else:
+        create_directories(n=n, dir_uuids=dir_uuids, location=location)
+
+
+def create_directories(
+    n: int, dir_uuids: list[str], location: str | None = None
+) -> None:
+    """Create the directories to install and setup the runners under."""
+    dir_uuids = dir_uuids
+
     if not location:
         runner_dir = pathlib.Path(pathlib.Path.cwd() / "runners")
     else:
@@ -87,10 +105,12 @@ def setup_runner(n: int = 1, location: str | None = None) -> None:
             pathlib.Path.home() / pathlib.Path(location) / "runners"
         )
 
-    print(f"Creating {n} directories to install the runners under:")
+    logger.info("Creating %s directories to install the runners under:", n)
     for idx in range(len(dir_uuids)):
-        print(f"{idx + 1}: {runner_dir}/{dir_uuids[idx]}")
-        pathlib.Path(runner_dir / dir_uuids[idx]).mkdir(exist_ok=True, parents=True)
+        logger.info("%s/%s", runner_dir, dir_uuids[idx])
+        pathlib.Path(runner_dir / str(dir_uuids[idx])).mkdir(
+            exist_ok=True, parents=True
+        )
 
 
 if __name__ == "__main__":
