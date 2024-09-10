@@ -22,6 +22,8 @@ Follow the instructions below for a brief usage guideline of the script:
 import argparse
 import logging
 import pathlib
+import tarfile
+import urllib.request
 import uuid
 
 logger = logging.getLogger(__name__)
@@ -91,6 +93,13 @@ def setup_runner(n: int = 1, location: str | None = None) -> None:
     else:
         create_directories(n=n, dir_uuids=dir_uuids, location=location)
 
+    # Download the runners to each of their directory
+    for directory in dir_uuids:
+        download_runners(
+            version="2.319.1",
+            path=pathlib.Path(pathlib.Path.cwd() / "runners" / directory),
+        )
+
 
 def create_directories(
     n: int, dir_uuids: list[str], location: str | None = None
@@ -111,6 +120,30 @@ def create_directories(
         pathlib.Path(runner_dir / str(dir_uuids[idx])).mkdir(
             exist_ok=True, parents=True
         )
+
+
+def download_runners(version: str, path: pathlib.Path, arch: str = "x64") -> None:
+    """Download the runners from GitHub.
+
+    Args:
+        version: The runner version to download from GitHub.
+        path: The path on the filesystem to download the runners to.
+        arch: The system architecture of the runners to download. Defaults to "x64".
+
+    Returns:
+        None
+
+    Raises:
+        None
+    """
+    base_url = "https://github.com/actions/runner/releases/download/"
+    tarball = f"{base_url}v{version}/actions-runner-linux-{arch}-{version}.tar.gz"
+
+    stream = urllib.request.urlopen(tarball)  # noqa: S310
+    file = tarfile.open(fileobj=stream, mode="r:gz")
+
+    logger.info("Extracting the tarfile before setting up the runner")
+    file.extractall(path=path, filter="fully_trusted")  # noqa 202
 
 
 if __name__ == "__main__":
