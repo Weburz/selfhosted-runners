@@ -86,6 +86,10 @@ def setup_runner(n: int = 1, location: str | None = None) -> None:
     """
     # Create a list of uniquely named directories to store the runners under.
     dir_uuids = [str(uuid.uuid4()).split("-")[0] for _ in range(int(n))]
+    # TODO (Somraj Saha): Figure a way out to fetch a specific version (or the latest
+    # version of the runner)
+    # 001
+    runner_version = "2.319.1"
 
     # Create the directories in the specified location
     if not location:
@@ -95,8 +99,12 @@ def setup_runner(n: int = 1, location: str | None = None) -> None:
 
     # Download the runners to each of their directory
     for directory in dir_uuids:
+        logger.info("Downloading GitHub Action runner v%s", runner_version)
+        logger.info(
+            "Extracting the tarfile before setting up the runner - %s", directory
+        )
         download_runners(
-            version="2.319.1",
+            version=runner_version,
             path=pathlib.Path(pathlib.Path.cwd() / "runners" / directory),
         )
 
@@ -104,7 +112,20 @@ def setup_runner(n: int = 1, location: str | None = None) -> None:
 def create_directories(
     n: int, dir_uuids: list[str], location: str | None = None
 ) -> None:
-    """Create the directories to install and setup the runners under."""
+    """Create the directories to install and setup the runners under.
+
+    Args:
+        n: Create n number of directories to install the runners at.
+        dir_uuids: A list of shortened UUID strings to identify a runner with.
+        location: The location to install the runner at. Defaults to the current
+        directory.
+
+    Returns:
+        None
+
+    Raises:
+        None
+    """
     dir_uuids = dir_uuids
 
     if not location:
@@ -142,7 +163,6 @@ def download_runners(version: str, path: pathlib.Path, arch: str = "x64") -> Non
     stream = urllib.request.urlopen(tarball)  # noqa: S310
     file = tarfile.open(fileobj=stream, mode="r:gz")
 
-    logger.info("Extracting the tarfile before setting up the runner")
     file.extractall(path=path, filter="fully_trusted")  # noqa 202
 
 
