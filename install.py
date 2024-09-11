@@ -130,6 +130,10 @@ def setup_runner(pat: str, url: str, n: int = 1, location: str | None = None) ->
         logger.info("Configuring the %s runner", directory)
         configure_runner(url=url, name=directory, runner_id=directory, pat=pat)
 
+    for directory in dir_uuids:
+        logger.info("Starting the runner %s as a background service", directory)
+        create_runner_service(runner_id=directory)
+
 
 def create_directories(
     n: int, dir_uuids: list[str], location: str | None = None
@@ -218,6 +222,28 @@ def configure_runner(url: str, pat: str, name: str, runner_id: str) -> None:
 
     os.chdir(runner_dir)
     subprocess.run(cmd)  # noqa: S603
+    os.chdir(root_dir)
+
+
+def create_runner_service(runner_id: str) -> None:
+    """Create a background service.
+
+    Args:
+        runner_id: The ID of the runner to run as a background service.
+
+    Returns:
+        None
+
+    Raises:
+        None
+    """
+    root_dir = pathlib.Path.cwd()
+    runner_dir = pathlib.Path(root_dir / "runners" / runner_id)
+
+    os.chdir(runner_dir)
+    subprocess.run(["sudo", f"{runner_dir}/svc.sh", "install"])  # noqa: S603, S607
+    subprocess.run(["sudo", f"{runner_dir}/svc.sh", "start"])  # noqa: S603, S607
+    os.chdir(root_dir)
 
 
 if __name__ == "__main__":
