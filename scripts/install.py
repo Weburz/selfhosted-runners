@@ -126,9 +126,9 @@ def setup_runner(
 
     # Create the directories in the specified location
     if not location:
-        create_directories(n=n, dir_uuids=runners)
+        create_directories(n=n, runners=runners)
     else:
-        create_directories(n=n, dir_uuids=runners, location=location)
+        create_directories(n=n, runners=runners, location=location)
 
     # Download the runners to each of their directory
     for runner in runners:
@@ -170,14 +170,12 @@ def get_latest_runner() -> str:
         return data.get("tag_name")
 
 
-def create_directories(
-    n: int, dir_uuids: list[str], location: str | None = None
-) -> None:
+def create_directories(n: int, runners: list[str], location: str | None = None) -> None:
     """Create the directories to install and setup the runners under.
 
     Args:
         n: Create n number of directories to install the runners at.
-        dir_uuids: A list of shortened UUID strings to identify a runner with.
+        runners: A list of shortened UUID strings to identify a runner with.
         location: The location to install the runner at. Defaults to the current
         directory.
 
@@ -187,7 +185,7 @@ def create_directories(
     Raises:
         None
     """
-    dir_uuids = dir_uuids
+    runners = runners
 
     if not location:
         runner_dir = pathlib.Path(pathlib.Path.cwd() / "runners")
@@ -197,11 +195,9 @@ def create_directories(
         )
 
     logger.info("Creating %s directories to install the runners under:", n)
-    for idx in range(len(dir_uuids)):
-        logger.info("%s/%s", runner_dir, dir_uuids[idx])
-        pathlib.Path(runner_dir / str(dir_uuids[idx])).mkdir(
-            exist_ok=True, parents=True
-        )
+    for idx in range(len(runners)):
+        logger.info("%s/%s", runner_dir, runners[idx])
+        pathlib.Path(runner_dir / str(runners[idx])).mkdir(exist_ok=True, parents=True)
 
 
 def download_runners(version: str, path: pathlib.Path, arch: str = "x64") -> None:
