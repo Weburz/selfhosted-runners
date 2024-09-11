@@ -21,7 +21,9 @@ Follow the instructions below for a brief usage guideline of the script:
 
 import argparse
 import logging
+import os
 import pathlib
+import subprocess
 import tarfile
 import urllib.request
 import uuid
@@ -64,17 +66,33 @@ def main() -> None:
         help="the location on the host to install the runners at (default: pwd)",
     )
 
+    parser.add_argument(
+        "--url",
+        type=str,
+        required=True,
+        help="The URL of the organisation on GitHub to setup the runners for",
+    )
+
+    parser.add_argument(
+        "--pat",
+        type=str,
+        required=True,
+        help="The Personal Access Token used to authenticate to the GitHub servers.",
+    )
+
     # Generate the list of arguments for further processing
     args = parser.parse_args()
 
     # Install and setup the runners on the remote host
-    setup_runner(args.number, location=args.location)
+    setup_runner(url=args.url, n=args.number, location=args.location, pat=args.pat)
 
 
-def setup_runner(n: int = 1, location: str | None = None) -> None:
+def setup_runner(pat: str, url: str, n: int = 1, location: str | None = None) -> None:
     """Install and setup the GitHub Action selfhosted runners.
 
     Args:
+        pat: The Personal Access Token (PAT) to authenticate to the GitHub servers.
+        url: The URL of the organisation on GitHub to configure the runners at.
         n: Install n number of runners on the host.
         location: The location to install the runners at.
 
@@ -107,6 +125,10 @@ def setup_runner(n: int = 1, location: str | None = None) -> None:
             version=runner_version,
             path=pathlib.Path(pathlib.Path.cwd() / "runners" / directory),
         )
+
+    for directory in dir_uuids:
+        logger.info("Configuring the %s runner", directory)
+        configure_runner(url=url, name=directory, runner_id=directory, pat=pat)
 
 
 def create_directories(
@@ -164,6 +186,38 @@ def download_runners(version: str, path: pathlib.Path, arch: str = "x64") -> Non
     file = tarfile.open(fileobj=stream, mode="r:gz")
 
     file.extractall(path=path, filter="fully_trusted")  # noqa 202
+
+
+def configure_runner(url: str, pat: str, name: str, runner_id: str) -> None:
+    """Install and setup the runners as background services.
+
+    Args:
+        url: The URL of the organisation (or repository) to configure the runners on.
+        pat: The Personal Access Token to use for configuring the runner.
+        name: The name of the runner to assign and show on the GitHub Web UI.
+        runner_id: The ID of the runner to configure.
+
+    Returns:
+        None
+
+    Raises:
+        None
+    """
+    root_dir = pathlib.Path.cwd()
+    runner_dir = pathlib.Path(root_dir / "runners" / runner_id)
+    cmd = [
+        f"{runner_dir}/config.sh",
+        "--unattended",
+        "--url",
+        url,
+        "--pat",
+        pat,
+        "--name",
+        name,
+    ]
+
+    os.chdir(runner_dir)
+    subprocess.run(cmd)  # noqa: S603
 
 
 if __name__ == "__main__":
