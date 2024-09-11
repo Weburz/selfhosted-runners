@@ -21,6 +21,7 @@ Follow the instructions below for a brief usage guideline of the script:
 
 import argparse
 import logging
+import json
 import os
 import pathlib
 import subprocess
@@ -107,7 +108,7 @@ def setup_runner(pat: str, url: str, n: int = 1, location: str | None = None) ->
     # TODO (Somraj Saha): Figure a way out to fetch a specific version (or the latest
     # version of the runner)
     # 001
-    runner_version = "2.319.1"
+    runner_version = get_latest_runner()
 
     # Create the directories in the specified location
     if not location:
@@ -133,6 +134,25 @@ def setup_runner(pat: str, url: str, n: int = 1, location: str | None = None) ->
     for directory in dir_uuids:
         logger.info("Starting the runner %s as a background service", directory)
         create_runner_service(runner_id=directory)
+
+
+def get_latest_runner() -> str:
+    """Fetch the latest release version of the selfhosted runners.
+
+    Args:
+        None
+
+    Returns:
+        The latest version number of the runner (example - v2.319.1)
+
+    Raises:
+        None
+    """
+    url = "https://api.github.com/repos/actions/runner/releases/latest"
+
+    with urllib.request.urlopen(url) as response:  # noqa: S310
+        data = json.loads(response.read().decode())
+        return data.get("tag_name")
 
 
 def create_directories(
