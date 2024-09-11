@@ -20,8 +20,8 @@ Follow the instructions below for a brief usage guideline of the script:
 """
 
 import argparse
-import logging
 import json
+import logging
 import os
 import pathlib
 import subprocess
@@ -81,14 +81,32 @@ def main() -> None:
         help="The Personal Access Token used to authenticate to the GitHub servers.",
     )
 
+    parser.add_argument(
+        "--arch",
+        type=str,
+        choices=["x64", "arm64", "arm"],
+        default="x64",
+        help="the architecture of the runner to download. default: 'x64'",
+    )
+
     # Generate the list of arguments for further processing
     args = parser.parse_args()
 
     # Install and setup the runners on the remote host
-    setup_runner(url=args.url, n=args.number, location=args.location, pat=args.pat)
+    setup_runner(
+        url=args.url,
+        n=args.number,
+        location=args.location,
+        pat=args.pat,
+        arch=args.arch,
+    )
 
 
-def setup_runner(pat: str, url: str, n: int = 1, location: str | None = None) -> None:
+# FIX (Somraj Saha): The default arch is set to 'arm64' temporarily only for
+# experimental purpose
+def setup_runner(
+    pat: str, url: str, n: int = 1, location: str | None = None, arch: str = "arm64"
+) -> None:
     """Install and setup the GitHub Action selfhosted runners.
 
     Args:
@@ -96,6 +114,7 @@ def setup_runner(pat: str, url: str, n: int = 1, location: str | None = None) ->
         url: The URL of the organisation on GitHub to configure the runners at.
         n: Install n number of runners on the host.
         location: The location to install the runners at.
+        arch: The architecture of the runner to download. Default: 'x64'
 
     Returns:
         None
@@ -105,9 +124,6 @@ def setup_runner(pat: str, url: str, n: int = 1, location: str | None = None) ->
     """
     # Create a list of uniquely named directories to store the runners under.
     dir_uuids = [str(uuid.uuid4()).split("-")[0] for _ in range(int(n))]
-    # TODO (Somraj Saha): Figure a way out to fetch a specific version (or the latest
-    # version of the runner)
-    # 001
     runner_version = get_latest_runner()
 
     # Create the directories in the specified location
@@ -125,6 +141,7 @@ def setup_runner(pat: str, url: str, n: int = 1, location: str | None = None) ->
         download_runners(
             version=runner_version,
             path=pathlib.Path(pathlib.Path.cwd() / "runners" / directory),
+            arch=arch,
         )
 
     for directory in dir_uuids:
