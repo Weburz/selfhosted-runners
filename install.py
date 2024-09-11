@@ -102,10 +102,8 @@ def main() -> None:
     )
 
 
-# FIX (Somraj Saha): The default arch is set to 'arm64' temporarily only for
-# experimental purpose
 def setup_runner(
-    pat: str, url: str, n: int = 1, location: str | None = None, arch: str = "arm64"
+    pat: str, url: str, n: int = 1, location: str | None = None, arch: str = "x64"
 ) -> None:
     """Install and setup the GitHub Action selfhosted runners.
 
@@ -123,34 +121,34 @@ def setup_runner(
         None
     """
     # Create a list of uniquely named directories to store the runners under.
-    dir_uuids = [str(uuid.uuid4()).split("-")[0] for _ in range(int(n))]
+    runners = [str(uuid.uuid4()).split("-")[0] for _ in range(int(n))]
     runner_version = get_latest_runner()
 
     # Create the directories in the specified location
     if not location:
-        create_directories(n=n, dir_uuids=dir_uuids)
+        create_directories(n=n, dir_uuids=runners)
     else:
-        create_directories(n=n, dir_uuids=dir_uuids, location=location)
+        create_directories(n=n, dir_uuids=runners, location=location)
 
     # Download the runners to each of their directory
-    for directory in dir_uuids:
+    for runner in runners:
         logger.info("Downloading GitHub Action runner v%s", runner_version)
-        logger.info(
-            "Extracting the tarfile before setting up the runner - %s", directory
-        )
+        logger.info("Extracting the tarfile before setting up the runner - %s", runner)
         download_runners(
             version=runner_version,
-            path=pathlib.Path(pathlib.Path.cwd() / "runners" / directory),
+            path=pathlib.Path(pathlib.Path.cwd() / "runners" / runner),
             arch=arch,
         )
 
-    for directory in dir_uuids:
-        logger.info("Configuring the %s runner", directory)
-        configure_runner(url=url, name=directory, runner_id=directory, pat=pat)
+    # Configure the runner to communicate with the GitHub servers
+    for runner in runners:
+        logger.info("Configuring the %s runner", runner)
+        configure_runner(url=url, name=runner, runner_id=runner, pat=pat)
 
-    for directory in dir_uuids:
-        logger.info("Starting the runner %s as a background service", directory)
-        create_runner_service(runner_id=directory)
+    # Invoke the runner to be run as a background service
+    for runner in runners:
+        logger.info("Starting the runner %s as a background service", runner)
+        create_runner_service(runner_id=runner)
 
 
 def get_latest_runner() -> str:
