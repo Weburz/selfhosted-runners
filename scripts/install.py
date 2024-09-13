@@ -26,6 +26,7 @@ import os
 import pathlib
 import subprocess
 import tarfile
+import urllib.error
 import urllib.request
 import uuid
 
@@ -130,9 +131,10 @@ def setup_runner(
     else:
         create_directories(n=n, runners=runners, location=location)
 
+    logger.info("Setting up GitHub Action runner v%s", runner_version)
+
     # Download the runners to each of their directory
     for runner in runners:
-        logger.info("Downloading GitHub Action runner v%s", runner_version)
         logger.info("Extracting the tarfile before setting up the runner - %s", runner)
         download_runners(
             version=runner_version,
@@ -167,7 +169,8 @@ def get_latest_runner() -> str:
 
     with urllib.request.urlopen(url) as response:  # noqa: S310
         data = json.loads(response.read().decode())
-        return data.get("tag_name")
+        # Ensure the returned value is in form of "2.319.1" and not "v2.319.1"
+        return data.get("tag_name")[1:]
 
 
 def create_directories(n: int, runners: list[str], location: str | None = None) -> None:
@@ -214,8 +217,8 @@ def download_runners(version: str, path: pathlib.Path, arch: str = "x64") -> Non
     Raises:
         None
     """
-    base_url = "https://github.com/actions/runner/releases/download/"
-    tarball = f"{base_url}v{version}/actions-runner-linux-{arch}-{version}.tar.gz"
+    base_url = "https://github.com/actions/runner/releases/download"
+    tarball = f"{base_url}/v{version}/actions-runner-linux-{arch}-{version}.tar.gz"
 
     stream = urllib.request.urlopen(tarball)  # noqa: S310
     file = tarfile.open(fileobj=stream, mode="r:gz")
