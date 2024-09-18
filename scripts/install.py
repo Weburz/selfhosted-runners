@@ -123,7 +123,7 @@ def setup_runner(
     """
     # Create a list of uniquely named directories to store the runners under.
     runners = [str(uuid.uuid4()).split("-")[0] for _ in range(int(n))]
-    runner_version = get_latest_runner()
+    runner_version = get_latest_runner(pat)
     token = get_token(pat)
 
     # Create the directories in the specified location
@@ -154,11 +154,11 @@ def setup_runner(
         create_runner_service(runner_id=runner)
 
 
-def get_latest_runner() -> str:
+def get_latest_runner(pat: str) -> str:
     """Fetch the latest release version of the selfhosted runners.
 
     Args:
-        None
+        pat: The Personal Access Token (PAT) used to fetch the data from GitHub.
 
     Returns:
         The latest version number of the runner (example - v2.319.1)
@@ -167,11 +167,20 @@ def get_latest_runner() -> str:
         None
     """
     url = "https://api.github.com/repos/actions/runner/releases/latest"
+    req = urllib.request.Request(  # noqa: S310
+        url,
+        headers={
+            "Accept": "application/vnd.github+json",
+            "Authorization": f"Bearer {pat}",
+            "X-GitHub-Api-Version": "2022-11-28",
+        },
+    )
 
-    with urllib.request.urlopen(url) as response:  # noqa: S310
+    with urllib.request.urlopen(req) as response:  # noqa: S310
         data = json.loads(response.read().decode())
-        # Ensure the returned value is in form of "2.319.1" and not "v2.319.1"
-        return data.get("tag_name")[1:]
+
+    # Ensure the returned value is in form of "2.319.1" and not "v2.319.1"
+    return data.get("tag_name")[1:]
 
 
 def create_directories(n: int, runners: list[str], location: str | None = None) -> None:
