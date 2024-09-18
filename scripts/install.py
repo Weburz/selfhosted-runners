@@ -124,6 +124,7 @@ def setup_runner(
     # Create a list of uniquely named directories to store the runners under.
     runners = [str(uuid.uuid4()).split("-")[0] for _ in range(int(n))]
     runner_version = get_latest_runner()
+    token = get_token(pat)
 
     # Create the directories in the specified location
     if not location:
@@ -145,7 +146,7 @@ def setup_runner(
     # Configure the runner to communicate with the GitHub servers
     for runner in runners:
         logger.info("Configuring the %s runner", runner)
-        configure_runner(url=url, name=runner, runner_id=runner, pat=pat)
+        configure_runner(url=url, name=runner, runner_id=runner, token=token)
 
     # Invoke the runner to be run as a background service
     for runner in runners:
@@ -226,12 +227,12 @@ def download_runners(version: str, path: pathlib.Path, arch: str = "x64") -> Non
     file.extractall(path=path, filter="fully_trusted")  # noqa 202
 
 
-def configure_runner(url: str, pat: str, name: str, runner_id: str) -> None:
+def configure_runner(url: str, token: str, name: str, runner_id: str) -> None:
     """Install and setup the runners as background services.
 
     Args:
         url: The URL of the organisation (or repository) to configure the runners on.
-        pat: The Personal Access Token to use for configuring the runner.
+        token: The Personal Access Token to use for configuring the runner.
         name: The name of the runner to assign and show on the GitHub Web UI.
         runner_id: The ID of the runner to configure.
 
@@ -248,8 +249,8 @@ def configure_runner(url: str, pat: str, name: str, runner_id: str) -> None:
         "--unattended",
         "--url",
         url,
-        "--pat",
-        pat,
+        "--token",
+        token,
         "--name",
         name,
     ]
@@ -278,6 +279,36 @@ def create_runner_service(runner_id: str) -> None:
     subprocess.run(["sudo", f"{runner_dir}/svc.sh", "install"])  # noqa: S603, S607
     subprocess.run(["sudo", f"{runner_dir}/svc.sh", "start"])  # noqa: S603, S607
     os.chdir(root_dir)
+
+
+def get_token(pat: str) -> str:
+    """Get a token to register the runners on GitHub with.
+
+    Args:
+        pat: This is the Personal Access Token (PAT) used to generate the token.
+
+    Returns:
+        None
+
+    Raises:
+        None
+    """
+    url = "https://api.github.com/orgs/Weburz/actions/runners/registration-token"
+    req = urllib.request.Request(  # noqa: S310
+        url,
+        headers={
+            "Accept": "application/vnd.github+json",
+            "Authorization": f"Bearer {pat}",
+            "X-GitHub-Api-Version": "2022-11-28",
+        },
+        method="POST",
+    )
+
+    with urllib.request.urlopen(req) as response:  # noqa: S310
+        data = response.read()
+        result = json.loads(data.decode("utf-8"))
+
+    return result.get("token")
 
 
 if __name__ == "__main__":
