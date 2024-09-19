@@ -36,13 +36,17 @@ def main() -> None:
         description="remove one or all existing selfhosted GitHub Action runners"
     )
 
-    parser.add_argument(
+    # Create a mutually exclusive group
+    group = parser.add_mutually_exclusive_group(required=True)
+
+    group.add_argument(
         "--all",
         action="store_true",
-        help="remove all existing runners from the host",
+        help="remove all existing runners from the host, defaults to 'true'",
+        default=True,
     )
 
-    parser.add_argument(
+    group.add_argument(
         "--runner",
         type=str,
         help="remove a particular existing runner from the host, if it exists",
