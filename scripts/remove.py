@@ -65,6 +65,19 @@ def main() -> None:
 
     args = parser.parse_args()
 
+    # Remove all runners if not particular runner is specified
+    if not args.runner:
+        answer = input(
+            "Removing all GitHub Action runners from the host! Confirm? [y/N]"
+        )
+
+        if answer.lower() in ("y", "yes"):
+            remove_all_runners(location=args.location, pat=args.pat)
+            sys.exit(0)
+        elif answer.lower() in ("n", "no"):
+            sys.exit(1)
+
+    # Remove a single specified runner
     if args.runner:
         answer = input(
             f"Removing the GitHub Action runner - {args.runner}! Confirm? [y/N]"
@@ -82,8 +95,40 @@ def main() -> None:
             sys.exit(1)
 
 
-def remove_all_runners() -> None:
-    """Remove all existing runners on the host."""
+def remove_all_runners(location: pathlib.Path, pat: str) -> None:
+    """Remove all existing runners on the host.
+
+    Args:
+        location: The location where the runners are installed on the host. Default: "."
+        pat: The Personal Access Token (PAT) to remove the runners from GitHub.
+
+    Returns:
+        None
+
+    Raises:
+        None
+    """
+    runner_dir = pathlib.Path(pathlib.Path.absolute(location) / "runners")
+    token = get_token(pat)
+    runners = pathlib.Path.iterdir(runner_dir)
+    original_dir = pathlib.Path.cwd()
+
+    # Check if the runner directory exists, throw error and exit if it does not
+    if not runner_dir.exists() and not runner_dir.is_dir():
+        logging.error("[ERROR] No runner found at location: %s", location)
+        sys.exit(1)
+
+    # Remove all runners from the host and GitHub
+    for runner in runners:
+        os.chdir(runner)
+        subprocess.run(["sudo", "./svc.sh", "stop"])  # noqa: S603, S607
+        subprocess.run(["sudo", "./svc.sh", "uninstall"])  # noqa: S603, S607
+
+        subprocess.run(["./config.sh", "remove", "--token", token])  # noqa: S603
+        os.chdir(original_dir)
+
+    # Cleanup the runners directory from the host
+    shutil.rmtree(runner_dir)
 
 
 def remove_individual_runner(location: pathlib.Path, id: str, pat: str) -> None:
