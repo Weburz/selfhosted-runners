@@ -7,6 +7,28 @@ The resources available in this repository are used internally at Weburz and is
 publicly accessible for anyone interested in using them for their self-hosting
 needs (or as a source of reference).
 
+## Disclaimer Before Using the Script
+
+1. You are **REQUESTED** to audit the script and identify any thing which might
+   cause issues on the system, the script ought to be run on. Neither the
+   authors of the script, nor Weburz will be liable to any damage caused to your
+   system when running this script.
+
+2. The script requires a working installation of Python (ideally, Python v3.12
+   and above) and will **ONLY** download the runners for Linux machines. So, if
+   you want the script to run on Windows/MacOS machines, please open a PR with a
+   brief description of the changes you want introduced to the script(s).
+
+3. The script also downloads the runners for systems running on x64 machines. A
+   future update will _probably_ support a more robust way to automatically
+   fetch the appropriate runners to install. PR are welcome by the way if you
+   want such a functionality at the earliest.
+
+4. Do note, the script as it is right now will configure and install n runners
+   if it is invoked n times. A future update _might_ change this behaviour so
+   please share your ideas if you are aware of any better ways to handle the
+   behaviour.
+
 ## Usage Guidelines
 
 The [`scripts`](./scripts) directory contains some Python files (named
