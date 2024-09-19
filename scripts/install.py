@@ -26,6 +26,7 @@ import os
 import pathlib
 import platform
 import subprocess
+import sys
 import tarfile
 import urllib.error
 import urllib.request
@@ -327,4 +328,9 @@ def get_token(pat: str) -> str:
 
 
 if __name__ == "__main__":
-    main()
+    # Check if script invoked by the "root" user, if so throw error message and exit
+    if not os.geteuid() == 0:
+        main()
+    else:
+        logging.error("Must run script as non-root user!")
+        sys.exit(1)
