@@ -24,6 +24,7 @@ import json
 import logging
 import os
 import pathlib
+import platform
 import subprocess
 import tarfile
 import urllib.error
@@ -233,7 +234,12 @@ def download_runners(version: str, path: pathlib.Path, arch: str = "x64") -> Non
     stream = urllib.request.urlopen(tarball)  # noqa: S310
     file = tarfile.open(fileobj=stream, mode="r:gz")
 
-    file.extractall(path=path, filter="fully_trusted")  # noqa 202
+    # INFO: The "filter" argument is not available on the latest Debian versions
+    # https://github.com/Weburz/selfhosted-runners/issues/1
+    if int(platform.python_version_tuple()[1]) < 12:
+        file.extractall(path=path)  # noqa: S202
+    else:
+        file.extractall(path=path, filter="fully_trusted")  # noqa: S202
 
 
 def configure_runner(url: str, token: str, name: str, runner_id: str) -> None:
