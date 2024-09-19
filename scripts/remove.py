@@ -129,27 +129,25 @@ def remove_all_runners(location: pathlib.Path, pat: str) -> None:
     Raises:
         None
     """
-    runner_dir = pathlib.Path(pathlib.Path.absolute(location) / "runners")
-    token = get_token(pat)
-    runners = pathlib.Path.iterdir(runner_dir)
     original_dir = pathlib.Path.cwd()
+    token = get_token(pat)
 
-    # Check if the runner directory exists, throw error and exit if it does not
-    if not runner_dir.exists() and not runner_dir.is_dir():
-        logging.error("[ERROR] No runner found at location: %s", location)
+    if not location.exists() and not location.is_dir():
+        logging.error("[ERROR] No runners found in the directory %s", location)
         sys.exit(1)
+    else:
+        for runner in location.iterdir():
+            os.chdir(runner)
+            subprocess.run(["sudo", "./svc.sh", "stop"])  # noqa: S603, S607
+            subprocess.run(["sudo", "./svc.sh", "uninstall"])  # noqa: S603, S607
+            subprocess.run(["./config.sh", "remove", "--token", token])  # noqa: S603
+            logging.info(
+                "[INFO] Runner %s removed and unconfigured from GitHub", runner
+            )
+            os.chdir(original_dir)
 
-    # Remove all runners from the host and GitHub
-    for runner in runners:
-        os.chdir(runner)
-        subprocess.run(["sudo", "./svc.sh", "stop"])  # noqa: S603, S607
-        subprocess.run(["sudo", "./svc.sh", "uninstall"])  # noqa: S603, S607
-
-        subprocess.run(["./config.sh", "remove", "--token", token])  # noqa: S603
-        os.chdir(original_dir)
-
-    # Cleanup the runners directory from the host
-    shutil.rmtree(runner_dir)
+        shutil.rmtree(location)
+        logging.info("[INFO] All runners cleaned up from the host")
 
 
 def remove_individual_runner(location: pathlib.Path, id: str, pat: str) -> None:
