@@ -67,14 +67,12 @@ def main() -> None:
 
     # Remove all runners if not particular runner is specified
     if not args.runner:
-        answer = input(
-            "Removing all GitHub Action runners from the host! Confirm? [y/N]"
-        )
-
-        if answer.lower() in ("y", "yes"):
+        if confirm_action(
+            "Removing all GitHub Action runners from the host! Confirm? [y/N] "
+        ):
             remove_all_runners(location=args.location, pat=args.pat)
             sys.exit(0)
-        elif answer.lower() in ("n", "no"):
+        else:
             sys.exit(1)
 
     # Remove a single specified runner
@@ -93,6 +91,29 @@ def main() -> None:
             sys.exit(0)
         elif answer.lower() in ("n", "no"):
             sys.exit(1)
+
+
+def confirm_action(prompt: str) -> bool:
+    """Prompt the user whether to perform a certain action or not.
+
+    Args:
+        prompt: The string to prompt the user with.
+
+    Returns:
+        boolean
+
+    Raises:
+        None
+    """
+    while True:
+        answer = input(prompt).lower()
+
+        if answer in ("y", "yes"):
+            return True
+        elif answer in ("n", "no"):  # noqa: RET505
+            return False
+        else:
+            print("Please answer 'yes' or 'no'.")
 
 
 def remove_all_runners(location: pathlib.Path, pat: str) -> None:
