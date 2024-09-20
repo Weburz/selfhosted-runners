@@ -67,14 +67,12 @@ def main() -> None:
 
     # Remove all runners if not particular runner is specified
     if not args.runner:
-        answer = input(
-            "Removing all GitHub Action runners from the host! Confirm? [y/N]"
-        )
-
-        if answer.lower() in ("y", "yes"):
-            remove_all_runners(location=args.location, pat=args.pat)
+        if confirm_action(
+            "Removing all GitHub Action runners from the host! Confirm? [y/N] "
+        ):
+            remove_all_runners(runner_path=args.location, pat=args.pat)
             sys.exit(0)
-        elif answer.lower() in ("n", "no"):
+        else:
             sys.exit(1)
 
     # Remove a single specified runner
@@ -86,7 +84,7 @@ def main() -> None:
         if answer.lower() in ("y", "yes"):
             logging.info("Removed the runner %s from %s", args.runner, args.location)
             remove_individual_runner(
-                location=pathlib.Path(pathlib.Path.cwd() / "runners"),
+                runner_path=pathlib.Path(pathlib.Path.cwd() / "runners"),
                 id=args.runner,
                 pat=args.pat,
             )
@@ -95,11 +93,34 @@ def main() -> None:
             sys.exit(1)
 
 
-def remove_all_runners(location: pathlib.Path, pat: str) -> None:
+def confirm_action(prompt: str) -> bool:
+    """Prompt the user whether to perform a certain action or not.
+
+    Args:
+        prompt: The string to prompt the user with.
+
+    Returns:
+        boolean
+
+    Raises:
+        None
+    """
+    while True:
+        answer = input(prompt).lower()
+
+        if answer in ("y", "yes"):
+            return True
+        elif answer in ("n", "no"):  # noqa: RET505
+            return False
+        else:
+            print("Please answer 'yes' or 'no'.")
+
+
+def remove_all_runners(runner_path: pathlib.Path, pat: str) -> None:
     """Remove all existing runners on the host.
 
     Args:
-        location: The location where the runners are installed on the host. Default: "."
+        runner_path: The file path, where the runners are installed at. Default: "."
         pat: The Personal Access Token (PAT) to remove the runners from GitHub.
 
     Returns:
@@ -108,34 +129,32 @@ def remove_all_runners(location: pathlib.Path, pat: str) -> None:
     Raises:
         None
     """
-    runner_dir = pathlib.Path(pathlib.Path.absolute(location) / "runners")
-    token = get_token(pat)
-    runners = pathlib.Path.iterdir(runner_dir)
     original_dir = pathlib.Path.cwd()
+    token = get_token(pat)
 
-    # Check if the runner directory exists, throw error and exit if it does not
-    if not runner_dir.exists() and not runner_dir.is_dir():
-        logging.error("[ERROR] No runner found at location: %s", location)
+    if not runner_path.exists() and not runner_path.is_dir():
+        logging.error("[ERROR] No runners found in the directory %s", runner_path)
         sys.exit(1)
+    else:
+        for runner in runner_path.iterdir():
+            os.chdir(runner)
+            subprocess.run(["sudo", "./svc.sh", "stop"])  # noqa: S603, S607
+            subprocess.run(["sudo", "./svc.sh", "uninstall"])  # noqa: S603, S607
+            subprocess.run(["./config.sh", "remove", "--token", token])  # noqa: S603
+            logging.info(
+                "[INFO] Runner %s removed and unconfigured from GitHub", runner
+            )
+            os.chdir(original_dir)
 
-    # Remove all runners from the host and GitHub
-    for runner in runners:
-        os.chdir(runner)
-        subprocess.run(["sudo", "./svc.sh", "stop"])  # noqa: S603, S607
-        subprocess.run(["sudo", "./svc.sh", "uninstall"])  # noqa: S603, S607
-
-        subprocess.run(["./config.sh", "remove", "--token", token])  # noqa: S603
-        os.chdir(original_dir)
-
-    # Cleanup the runners directory from the host
-    shutil.rmtree(runner_dir)
+        shutil.rmtree(runner_path)
+        logging.info("[INFO] All runners cleaned up from the host")
 
 
-def remove_individual_runner(location: pathlib.Path, id: str, pat: str) -> None:
+def remove_individual_runner(runner_path: pathlib.Path, id: str, pat: str) -> None:
     """Remove an individual runner which is identified by its unique ID.
 
     Args:
-        location: The location to search for existing runners, defaults to "."
+        runner_path: The location to search for existing runners, defaults to "."
         id: The unique ID of the runner to remove.
         pat: The Personal Access Token (PAT) to remove the runner from GitHub.
 
@@ -146,7 +165,7 @@ def remove_individual_runner(location: pathlib.Path, id: str, pat: str) -> None:
         None
     """
     original_dir = pathlib.Path.cwd()
-    runner_dir = pathlib.Path(pathlib.Path.cwd() / location / id)
+    runner_dir = pathlib.Path(pathlib.Path.cwd() / runner_path / id)
     token = get_token(pat)
 
     if runner_dir.exists() and runner_dir.is_dir():
@@ -167,7 +186,7 @@ def remove_individual_runner(location: pathlib.Path, id: str, pat: str) -> None:
         logging.error(
             "[ERROR] The runner - %s was not found at location: %s",
             id,
-            pathlib.Path(location / id),
+            pathlib.Path(runner_path / id),
         )
         sys.exit(1)
 
