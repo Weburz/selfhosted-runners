@@ -56,6 +56,35 @@ def install_unzip() -> None:
     subprocess.run(["sudo", "apt-get", "install", "unzip"])  # noqa: S607, S603
 
 
+def install_docker() -> None:
+    """Install Docker on the server.
+
+    Args:
+        None
+
+    Returns:
+        None
+
+    Raises:
+        None
+    """
+    keyrings_dir = "/etc/apt/keyrings"
+    gpg_key_url = "https://download.docker.com/linux/debian/gpg"
+
+    logger.info('Install "Docker"')
+
+    # Add Docker's official GPG key
+    subprocess.run(  # noqa: S603
+        ["install", "--mode", "0755", "--directory", keyrings_dir]  # noqa: S607
+    )
+    subprocess.run(  # noqa: S603
+        ["curl", "-fsSL", gpg_key_url, f"{keyrings_dir}/docker.asc"]  # noqa: S607
+    )
+    subprocess.run(["chmod", "a+r", f"{keyrings_dir}/docker.asc"])  # noqa: S607, S603
+
+    # Add the repository to the APT sources
+
+
 def main() -> None:
     """The entrypoint of the script.
 
@@ -69,6 +98,8 @@ def main() -> None:
         None
     """
     install_unzip()
+
+    install_docker()
 
 
 if __name__ == "__main__":
