@@ -1,6 +1,6 @@
 # Self-Hosting GitHub Action Runners
 
-This repository contains some scripts (and some Terrafor IaC to provision the
+This repository contains some scripts (and some Terraform IaC to provision the
 resources) to setup
 [self-hosted GitHub Action runners](https://docs.github.com/en/actions/hosting-your-own-runners/managing-self-hosted-runners/about-self-hosted-runners).
 The resources available in this repository are used internally at Weburz and is
@@ -9,10 +9,10 @@ needs (or as a source of reference).
 
 ## Disclaimer Before Using the Script
 
-1. You are **REQUESTED** to audit the script and identify any thing which might
-   cause issues on the system, the script ought to be run on. Neither the
-   authors of the script, nor Weburz will be liable to any damage caused to your
-   system when running this script.
+1. You are **REQUESTED** to audit the script and identify any potential issues that
+   might affect the system's performance or functionality, on which the script ought to
+   be run on. Neither the authors of the script, nor Weburz will be liable to any damage
+   caused to your system when running this script.
 
 2. The script requires a working installation of Python (ideally, Python v3.12
    and above) and will **ONLY** download the runners for Linux machines. So, if
@@ -21,13 +21,12 @@ needs (or as a source of reference).
 
 3. The script also downloads the runners for systems running on x64 machines. A
    future update will _probably_ support a more robust way to automatically
-   fetch the appropriate runners to install. PR are welcome by the way if you
-   want such a functionality at the earliest.
+   fetch the appropriate runners to install. Feel free to submit pull requests if you'd
+   like to expedite the addition of this functionality.
 
-4. Do note, the script as it is right now will configure and install n runners
-   if it is invoked n times. A future update _might_ change this behaviour so
-   please share your ideas if you are aware of any better ways to handle the
-   behaviour.
+4. Please note that, in its current form, the script will configure and install _n_
+   runners if invoked _n_ times. A future update _may_ change this behavior, so feel
+   free to share any suggestions if you have better ideas for managing this process.
 
 ## Usage Guidelines
 
@@ -43,7 +42,7 @@ The repository contains the necessary Terraform IaC to provision a Virtual
 Machine on Azure. We use Azure internally at Weburz hence we provided the IaC in
 the `infra` directory with this repository for our particular needs. If you do
 not use Azure for infrastructure provisioning, you can skip this section of the
-documentations to the next without hesitation.
+documentation to the next without any hesitation.
 
 Before you can provision a VM, you will have to provide certain variables to
 Terraform to add as metadata for the infrastructure. You can do so by creating a
@@ -60,7 +59,7 @@ terraform apply "main.tfplan"
 ```
 
 **NOTE**: The `terraform plan` command will automatically detect and pick up the
-`terraform.tfvars` file as long as its named exactly as such and nothing else
+`terraform.tfvars` file as long as it's named exactly as such and nothing else
 (for example, `terraform.example.tfvars` won't work). If you have a differently
 named `.tfvars` file, you will have to pass it to the `terraform plan` command
 explicitly (see
@@ -68,7 +67,7 @@ explicitly (see
 
 With the Virtual Machine provisioned, you will have to access it remotely using
 SSH before the runners can be provisioned on them. The following will help in
-exactly that regards:
+exactly that regard:
 
 ```console
 ssh $(terraform output --raw "admin_username")@$(terraform output --raw "public_ip_address")
@@ -120,9 +119,9 @@ this section of the documentations.
 2. If you are contributing a PR or two, please ensure the code is well
    formatted. We use `ruff` and `terraform fmt` to format the source code into a
    standardised community accepted format.
-3. If your contribution requires any changes to the documentations or if you
-   find some aspects of the project missing from the documentations, please do
-   not hesitate to open a PR updating the documentations either.
+3. If your contribution requires any changes to the documentation or if you
+   find some aspects of the project missing from the documentation, please do
+   not hesitate to open a PR to update it.
 
 ## Usage and Distribution Rights
 
