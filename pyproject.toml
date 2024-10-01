@@ -7,7 +7,7 @@ package-mode = false
 python = "^3.12"
 
 [tool.poetry.group.dev.dependencies]
-ruff = "^0.6.4"
+ruff = "^0.6.8"
 mypy = "^1.11.2"
 
 [build-system]
